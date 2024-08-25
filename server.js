@@ -1,7 +1,8 @@
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = 3000;
 const schedule = require('node-schedule');
@@ -15,18 +16,29 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
-// Generate and print QR code for authentication
-client.on('qr', (qr) => {
-    qrcode.generate(qr, { small: true });
+let qrCodeImage = '';
+let isAuthenticated = false;
+
+// Generate and serve QR code for authentication
+client.on('qr', async (qr) => {
+    try {
+        qrCodeImage = await qrcode.toDataURL(qr);
+        console.log('QR Code URL:', qrCodeImage);  // For debugging
+        fs.writeFileSync(path.join(__dirname, 'public', 'qr-code.png'), qr); // Save QR code to a file
+    } catch (err) {
+        console.error('Error generating QR code:', err);
+    }
 });
 
 // Handle client authentication success
 client.on('authenticated', () => {
+    isAuthenticated = true;
     logToFile('Authenticated successfully');
 });
 
 // Handle client authentication failure
 client.on('auth_failure', (msg) => {
+    isAuthenticated = false;
     logToFile('Authentication failed: ' + msg);
 });
 
@@ -38,22 +50,33 @@ client.on('ready', () => {
 // Initialize the WhatsApp client
 client.initialize();
 
+// Endpoint to serve the QR code image
+app.get('/qr-code', (req, res) => {
+    if (qrCodeImage) {
+        res.send(`<img src="${qrCodeImage}" alt="QR Code">`);
+    } else {
+        res.status(404).send('QR code not available');
+    }
+});
+
+// Endpoint to check authentication status
+app.get('/status', (req, res) => {
+    res.json({ authenticated: isAuthenticated });
+});
+
 // Endpoint to schedule a message
 app.post('/schedule-message', async (req, res) => {
-    const { number, message, schedule } = req.body;
+    const { phoneNumber, message, datetime } = req.body;
 
-    if (!number || !message || !schedule) {
-        return res.status(400).send('Please provide phone number, message, and schedule.');
+    if (!phoneNumber || !message || !datetime) {
+        return res.status(400).send('Please provide number, message, and schedule.');
     }
 
     // Remove any leading zeros from the number
-    const formattedNumber = number.startsWith('0') ? number.slice(1) : number;
-
-    // Add country code for Pakistan
+    const formattedNumber = phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber;
     const chatId = `92${formattedNumber}@c.us`;
 
-    // Schedule the message
-    scheduleJob(schedule, chatId, message);
+    scheduleJob(datetime, chatId, message);
 
     res.send('Message scheduled successfully!');
 });
