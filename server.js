@@ -3,15 +3,16 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
-const app = express();
-const port = 3000;
 const schedule = require('node-schedule');
 
-// Middleware to parse JSON bodies
+const app = express();
+const port = 3000;
+
+// Middleware
 app.use(express.json());
 app.use(express.static('public'));
 
-// Create a new instance of the WhatsApp client
+// Initialize WhatsApp client
 const client = new Client({
     authStrategy: new LocalAuth()
 });
@@ -19,60 +20,54 @@ const client = new Client({
 let qrCodeImage = '';
 let isAuthenticated = false;
 
-// Generate and serve QR code for authentication
+// Event listeners
 client.on('qr', async (qr) => {
     try {
         qrCodeImage = await qrcode.toDataURL(qr);
-        console.log('QR Code URL:', qrCodeImage);  // For debugging
-        fs.writeFileSync(path.join(__dirname, 'public', 'qr-code.png'), qr); // Save QR code to a file
+        fs.writeFileSync(path.join(__dirname, 'public', 'qr-code.png'), qr);
+        logToFile('QR Code generated');
     } catch (err) {
         console.error('Error generating QR code:', err);
     }
 });
 
-// Handle client authentication success
 client.on('authenticated', () => {
     isAuthenticated = true;
     logToFile('Authenticated successfully');
 });
 
-// Handle client authentication failure
 client.on('auth_failure', (msg) => {
     isAuthenticated = false;
     logToFile('Authentication failed: ' + msg);
 });
 
-// Handle client ready event
 client.on('ready', () => {
     logToFile('Client is ready!');
 });
 
-// Initialize the WhatsApp client
+// Initialize WhatsApp client
 client.initialize();
 
-// Endpoint to serve the QR code image
+// Endpoints
 app.get('/qr-code', (req, res) => {
     if (qrCodeImage) {
-        res.send(`<img src="${qrCodeImage}" alt="QR Code">`);
+        res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
-        res.status(404).send('QR code not available');
+        res.status(404).send('Authentication in processing. Please wait...');
     }
 });
 
-// Endpoint to check authentication status
 app.get('/status', (req, res) => {
     res.json({ authenticated: isAuthenticated });
 });
 
-// Endpoint to schedule a message
-app.post('/schedule-message', async (req, res) => {
+app.post('/schedule-message', (req, res) => {
     const { phoneNumber, message, datetime } = req.body;
 
     if (!phoneNumber || !message || !datetime) {
-        return res.status(400).send('Please provide number, message, and schedule.');
+        return res.status(400).send('Please provide phone number, message, and schedule time.');
     }
 
-    // Remove any leading zeros from the number
     const formattedNumber = phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber;
     const chatId = `92${formattedNumber}@c.us`;
 
@@ -81,7 +76,7 @@ app.post('/schedule-message', async (req, res) => {
     res.send('Message scheduled successfully!');
 });
 
-// Function to schedule a job
+// Schedule a message job
 function scheduleJob(scheduleTime, chatId, message) {
     schedule.scheduleJob(new Date(scheduleTime), async () => {
         try {
@@ -93,7 +88,7 @@ function scheduleJob(scheduleTime, chatId, message) {
     });
 }
 
-// Function to log messages to log.txt
+// Logging function
 function logToFile(message) {
     const timestamp = new Date().toISOString();
     fs.appendFile('log.txt', `${timestamp} - ${message}\n`, (err) => {
@@ -103,7 +98,6 @@ function logToFile(message) {
     });
 }
 
-// Endpoint to serve the log file
 app.get('/logs', (req, res) => {
     fs.readFile('log.txt', 'utf8', (err, data) => {
         if (err) {
@@ -114,7 +108,7 @@ app.get('/logs', (req, res) => {
     });
 });
 
-// Start the Express server
+// Start server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
