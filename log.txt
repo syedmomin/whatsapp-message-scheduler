@@ -1,7 +1,0 @@
-2024-08-28T17:20:34.856Z - QR Code generated
-2024-08-28T17:21:57.975Z - Authenticated successfully
-2024-08-28T17:22:01.236Z - Client is ready!
-2024-08-28T17:40:25.704Z - Authenticated successfully
-2024-08-28T17:40:25.707Z - Authenticated successfully
-2024-08-28T17:40:54.050Z - Client is ready!
-2024-08-28T17:40:54.054Z - Client is ready!

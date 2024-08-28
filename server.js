@@ -52,7 +52,7 @@ app.get('/qr-code', (req, res) => {
     if (qrCodeImage) {
         res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
-        res.status(404).send('<div id="loading-code"><div></div><div></div><div></div><div></div></div><h4>Authentication in processing</h4>');
+        res.status(404).send('Please wati...');
     }
 });
 

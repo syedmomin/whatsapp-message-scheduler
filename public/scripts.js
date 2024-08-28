@@ -1,21 +1,27 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // First check authentication status
-    fetch('/status')
-        .then(response => response.json())
-        .then(status => {
-            if (status.authenticated) {
-                showSchedulingScreen();
-            } else {
-                startQrCodePolling();
-            }
-        })
-        .catch(error => {
-            console.error('Error checking authentication status:', error);
-        });
+    let pollInterval;
 
-    function startQrCodePolling() {
-        loadQrCode(); // Load QR code initially
-        setInterval(loadQrCode, 5000); // Poll every 5 seconds to load QR code
+    // Start polling for authentication status
+    startAuthenticationPolling();
+
+    function startAuthenticationPolling() {
+        pollInterval = setInterval(checkAuthenticationStatus, 2000); // Check every 2 seconds
+    }
+
+    function checkAuthenticationStatus() {
+        fetch('/status')
+            .then(response => response.json())
+            .then(status => {
+                if (status.authenticated) {
+                    clearInterval(pollInterval); // Stop polling
+                    showSchedulingScreen(); // Switch to scheduling screen
+                } else {
+                    loadQrCode(); // Continue showing QR code if not authenticated
+                }
+            })
+            .catch(error => {
+                console.error('Error checking authentication status:', error);
+            });
     }
 
     function loadQrCode() {

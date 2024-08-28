@@ -16,10 +16,9 @@ This WhatsApp extension allows you to schedule messages by scanning a QR code th
 
 
 
- **Install Dependencies**: Navigate to the project directory and install the necessary dependencies.
----- npm install
+ **Install Dependencies**:  *npm install*
 
- **Run the Application**: npm start
+ **Run the Application**: *npm start*
 
 
 
