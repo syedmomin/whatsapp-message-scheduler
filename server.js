@@ -25,7 +25,6 @@ client.on('qr', async (qr) => {
     try {
         qrCodeImage = await qrcode.toDataURL(qr);
         fs.writeFileSync(path.join(__dirname, 'public', 'qr-code.png'), qr);
-        logToFile('QR Code generated');
     } catch (err) {
         console.error('Error generating QR code:', err);
     }
@@ -53,7 +52,7 @@ app.get('/qr-code', (req, res) => {
     if (qrCodeImage) {
         res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
-        res.status(404).send('Authentication in processing. Please wait...');
+        res.status(404).send('<div id="loading-code"><div></div><div></div><div></div><div></div></div><h4>Authentication in processing</h4>');
     }
 });
 
@@ -69,7 +68,7 @@ app.post('/schedule-message', (req, res) => {
     }
 
     const formattedNumber = phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber;
-    const chatId = `92${formattedNumber}@c.us`;
+    const chatId = `${formattedNumber}@c.us`;
 
     scheduleJob(datetime, chatId, message);
 

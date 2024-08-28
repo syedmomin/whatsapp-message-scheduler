@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,65 +11,97 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<div class="container">
-    <!-- QR Code Display -->
-    <div id="qr-code-container">
-        <div id="qr-code"></div>
-    </div>
+    <div class="container">
+        <!-- QR Code Display -->
+        <div id="qr-code-container">
+            <div id="qr-code"></div>
+        </div>
 
-    <!-- Scheduling Screen (Hidden initially) -->
-    <div id="scheduling-container" class="d-none">
-        <div class="tabs-container">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="message-tab" data-bs-toggle="tab" href="#message" role="tab" aria-controls="message" aria-selected="true"><i class="fas fa-envelope"></i> Schedule Message</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="logs-tab" data-bs-toggle="tab" href="#logs" role="tab" aria-controls="logs" aria-selected="false"><i class="fas fa-file-alt"></i> View Logs</a>
-                </li>
-            </ul>
-            <div class="tab-content mt-3" id="myTabContent">
-                <!-- Message Tab -->
-                <div class="tab-pane fade show active" id="message" role="tabpanel" aria-labelledby="message-tab">
-                    <div class="form-container">
-                        <h2 class="text-center mb-4">Schedule a Message📅</h2>
-                        <form id="scheduleForm">
-                            <div class="form-floating mb-3">
-                                <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" required>
-                                <label for="phoneNumber">Contact Number</label>
-                            </div>
-                            <div class="form-floating mb-3">
-                                <textarea id="message" name="message" class="form-control" required style="height: 100px;"></textarea>
-                                <label for="message">Message</label>
-                            </div>
-                            <div class="form-floating mb-3">
-                                <input type="datetime-local" id="datetime" name="datetime" class="form-control" required>
-                                <label for="datetime">Date and Time</label>
-                            </div>
-                            <button type="submit" class="btn btn-custom btn-block">Schedule Message</button>
-                        </form>
-                        <div id="response" class="mt-3"></div>
-                    </div>
+        <!-- Scheduling Screen (Hidden initially) -->
+        <div id="scheduling-container" class="d-none">
+            <div class="tabs-container">
+                <div class="d-flex justify-content-between">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="message-tab" data-bs-toggle="tab" href="#message" role="tab"
+                                aria-controls="message" aria-selected="true">
+                                <i class="fas fa-envelope"></i> Schedule Message
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="logs-tab" data-bs-toggle="tab" href="#logs" role="tab"
+                                aria-controls="logs" aria-selected="false">
+                                <i class="fas fa-file-alt"></i> View Logs
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://github.com/syedmomin/" target="_blank"><i
+                                    class="fab fa-github"></i></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.facebook.com/DanySAM.hacki.786/" target="_blank"><i
+                                    class="fab fa-facebook"></i></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://www.linkedin.com/in/syed-momin-danysam04/" target="_blank"><i
+                                    class="fab fa-linkedin"></i></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="https://danysam-portfolio.netlify.app/" target="_blank"><i
+                                    class="fas fa-globe"></i></a>
+                        </li>
+                    </ul>
                 </div>
-                <!-- Logs Tab -->
-                <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
-                    <div class="log-container">
-                        <h2 class="text-center mb-4">Logs</h2>
-                        <pre id="logContent">Loading logs...</pre>
+                <div class="tab-content mt-3" id="myTabContent">
+                    <!-- Message Tab -->
+                    <div class="tab-pane fade show active" id="message" role="tabpanel" aria-labelledby="message-tab">
+                        <div class="form-container">
+                            <h2 class="text-center mb-4">Schedule a Message📅</h2>
+                            <form id="scheduleForm">
+                                <div class="form-floating mb-3">
+                                    <input type="text" id="phoneNumber" name="phoneNumber" class="form-control"
+                                        required>
+                                    <label for="phoneNumber">Contact Number<small class="text-warning">(Please enter a
+                                            valid contact number with country code)</small></label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <textarea id="message" name="message" class="form-control" required
+                                        style="height: 100px;"></textarea>
+                                    <label for="message">Message</label>
+                                </div>
+                                <div class="form-floating mb-3">
+                                    <input type="datetime-local" id="datetime" name="datetime" class="form-control"
+                                        required>
+                                    <label for="datetime">Date and Time</label>
+                                </div>
+                                <button type="submit" class="btn btn-custom btn-block">Schedule Message</button>
+                            </form>
+                            <div id="response" class="mt-3"></div>
+                        </div>
+                    </div>
+                    <!-- Logs Tab -->
+                    <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+                        <div class="log-container">
+                            <h2 class="text-center mb-4">Logs</h2>
+                            <pre id="logContent">Loading logs...</pre>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Bootstrap JS and dependencies -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="scripts.js"></script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="scripts.js"></script>
 
 </body>
+
 </html>

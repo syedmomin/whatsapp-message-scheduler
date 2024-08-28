@@ -1,16 +1,23 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Start the client and load QR Code image
-    fetch('/start')
-        .then(response => response.text())
-        .then(() => {
-            loadQrCode();
-            checkAuthentication();
+document.addEventListener('DOMContentLoaded', function () {
+    // First check authentication status
+    fetch('/status')
+        .then(response => response.json())
+        .then(status => {
+            if (status.authenticated) {
+                showSchedulingScreen();
+            } else {
+                startQrCodePolling();
+            }
         })
         .catch(error => {
-            console.error('Error initializing client:', error);
+            console.error('Error checking authentication status:', error);
         });
 
-    // Load QR Code image
+    function startQrCodePolling() {
+        loadQrCode(); // Load QR code initially
+        setInterval(loadQrCode, 5000); // Poll every 5 seconds to load QR code
+    }
+
     function loadQrCode() {
         fetch('/qr-code')
             .then(response => response.text())
@@ -22,19 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Check authentication status and show scheduling screen
-    function checkAuthentication() {
-        fetch('/status')
-            .then(response => response.json())
-            .then(status => {
-                if (status.authenticated) {
-                    document.getElementById('qr-code-container').classList.add('d-none');
-                    document.getElementById('scheduling-container').classList.remove('d-none');
-                }
-            })
-            .catch(error => {
-                console.error('Error checking authentication status:', error);
-            });
+    function showSchedulingScreen() {
+        document.getElementById('qr-code-container').classList.add('d-none');
+        document.getElementById('scheduling-container').classList.remove('d-none');
     }
 
     // Form submission to schedule a message
@@ -43,22 +40,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
 
-        fetch('/schedule-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById('response').innerText = data;
+        try {
+            const response = await fetch('/schedule-message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.text();
+            document.getElementById('response').innerText = result;
             document.getElementById('scheduleForm').reset();
             setTimeout(() => document.getElementById('response').innerText = '', 5000);
-        })
-        .catch(error => {
+        } catch (error) {
             document.getElementById('response').innerText = 'An error occurred: ' + error;
-        });
+        }
     });
 
     // Load logs when the Logs tab is activated
