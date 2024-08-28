@@ -4,65 +4,53 @@ const qrcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const schedule = require('node-schedule');
+const { pool, getOrCreateUser } = require('./db/config');
 
+// Express setup
 const app = express();
 const port = 3000;
-
-// Middleware
 app.use(express.json());
 app.use(express.static('public'));
 
-// Initialize WhatsApp client
+// WhatsApp client setup
 const client = new Client({
     authStrategy: new LocalAuth()
 });
 
 let qrCodeImage = '';
-let isAuthenticated = false;
+let userId = null;
 
-// Event listeners
 client.on('qr', async (qr) => {
-    try {
-        qrCodeImage = await qrcode.toDataURL(qr);
-        fs.writeFileSync(path.join(__dirname, 'public', 'qr-code.png'), qr);
-        logToFile('QR Code generated');
-    } catch (err) {
-        console.error('Error generating QR code:', err);
-    }
+    qrCodeImage = await qrcode.toDataURL(qr);
 });
 
-client.on('authenticated', () => {
-    isAuthenticated = true;
-    logToFile('Authenticated successfully');
+client.on('ready', async () => {
+    const whatsappId = client.info.wid.user; // Unique identifier for the session
+    userId = await getOrCreateUser(whatsappId);
+    console.log(`User authenticated with ID: ${userId}`);
+    console.log('Client is ready!');
 });
 
-client.on('auth_failure', (msg) => {
-    isAuthenticated = false;
-    logToFile('Authentication failed: ' + msg);
-});
-
-client.on('ready', () => {
-    logToFile('Client is ready!');
-});
-
-// Initialize WhatsApp client
 client.initialize();
 
-// Endpoints
+// Routes
+
+// Serve QR code to the user
 app.get('/qr-code', (req, res) => {
     if (qrCodeImage) {
         res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
-        res.status(404).send('Authentication in processing. Please wait...');
+        res.status(404).send('Authentication in process. Please wait...');
     }
 });
 
-app.get('/status', (req, res) => {
-    res.json({ authenticated: isAuthenticated });
-});
-
-app.post('/schedule-message', (req, res) => {
+// Schedule a message
+app.post('/schedule-message', async (req, res) => {
     const { phoneNumber, message, datetime } = req.body;
+
+    if (!userId) {
+        return res.status(403).send('User not authenticated.');
+    }
 
     if (!phoneNumber || !message || !datetime) {
         return res.status(400).send('Please provide phone number, message, and schedule time.');
@@ -71,44 +59,33 @@ app.post('/schedule-message', (req, res) => {
     const formattedNumber = phoneNumber.startsWith('0') ? phoneNumber.slice(1) : phoneNumber;
     const chatId = `92${formattedNumber}@c.us`;
 
-    scheduleJob(datetime, chatId, message);
+    schedule.scheduleJob(new Date(datetime), async () => {
+        try {
+            await client.sendMessage(chatId, message);
+            await pool.query('INSERT INTO scheduled_messages (user_id, phone_number, message, scheduled_time) VALUES ($1, $2, $3, $4)', [userId, phoneNumber, message, datetime]);
+            console.log(`Message sent to ${chatId}: ${message}`);
+        } catch (err) {
+            console.log('Failed to send message:', err);
+        }
+    });
 
     res.send('Message scheduled successfully!');
 });
 
-// Schedule a message job
-function scheduleJob(scheduleTime, chatId, message) {
-    schedule.scheduleJob(new Date(scheduleTime), async () => {
-        try {
-            await client.sendMessage(chatId, message);
-            logToFile(`Message sent to ${chatId}: ${message}`);
-        } catch (err) {
-            logToFile('Failed to send message: ' + err);
-        }
-    });
-}
+// View logs and scheduled messages
+app.get('/logs', async (req, res) => {
+    if (!userId) {
+        return res.status(403).send('User not authenticated.');
+    }
 
-// Logging function
-function logToFile(message) {
-    const timestamp = new Date().toISOString();
-    fs.appendFile('log.txt', `${timestamp} - ${message}\n`, (err) => {
-        if (err) {
-            console.error('Failed to write to log file:', err);
-        }
-    });
-}
-
-app.get('/logs', (req, res) => {
-    fs.readFile('log.txt', 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).send('Unable to read log file');
-        } else {
-            res.send(data);
-        }
-    });
+    try {
+        const logs = await pool.query('SELECT * FROM scheduled_messages WHERE user_id = $1', [userId]);
+        res.json(logs.rows);
+    } catch (err) {
+        res.status(500).send('Unable to retrieve logs.');
+    }
 });
 
-// Start server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
