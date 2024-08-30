@@ -15,14 +15,6 @@ This WhatsApp extension allows you to schedule messages by scanning a QR code th
 - **Responsive UI**: A user-friendly interface that works well on different screen sizes.
 
 
-
- **Install Dependencies**:  *npm install*
-
- **Run the Application**: *npm start*
-
-
-
-
 ### Security
 
 - **All messages are sent securely using the authenticated WhatsApp Web session.**
@@ -38,6 +30,18 @@ This WhatsApp extension allows you to schedule messages by scanning a QR code th
 
 # Contributions
  *Contributions are welcome! Feel free to fork the project and submit a pull request.*
+
+
+ 
+ **Install Dependencies**:  
+ ```bash
+$ npm run install
+```
+
+ **Run the Application**: 
+ ```bash
+$ npm run start
+```
 
 
 
