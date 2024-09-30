@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function showSchedulingScreen() {
         document.getElementById('qr-code-container').classList.add('d-none');
         document.getElementById('scheduling-container').classList.remove('d-none');
+        document.getElementById('logoutButton').classList.remove('d-none'); 
     }
 
     // Form submission to schedule a message
@@ -73,5 +74,23 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => {
                 document.getElementById('logContent').innerText = 'An error occurred: ' + error;
             });
+    });
+
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.text();
+            alert(result);
+            // Optionally, redirect the user to the login page or refresh the page
+            location.reload();
+        } catch (error) {
+            alert('Error logging out: ' + error);
+        }
     });
 });

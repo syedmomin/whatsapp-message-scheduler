@@ -4,6 +4,7 @@ const qrcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const schedule = require('node-schedule');
+const rimraf = require('rimraf');
 
 const app = express();
 const port = 3000;
@@ -52,7 +53,7 @@ app.get('/qr-code', (req, res) => {
     if (qrCodeImage) {
         res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
-        res.status(404).send('Please wati...');
+        res.status(404).send('Please wait...');
     }
 });
 
@@ -74,6 +75,44 @@ app.post('/schedule-message', (req, res) => {
 
     res.send('Message scheduled successfully!');
 });
+
+// Logout endpoint
+app.post('/logout', async (req, res) => {
+    try {
+        // Check if client is in ready state before logging out
+        if (!client.info || !client.info.wid) {
+            throw new Error('Client not ready, cannot log out');
+        }
+
+        // Attempt to log out
+        await client.logout();
+
+        // Remove authentication folders (wwebjs_auth and wwebjs_cache)
+        const authDir = path.join(__dirname, '.wwebjs_auth');
+        const cacheDir = path.join(__dirname, '.wwebjs_cache');
+
+        rimraf(authDir, (err) => {
+            if (err) console.error('Error removing auth directory:', err);
+        });
+
+        rimraf(cacheDir, (err) => {
+            if (err) console.error('Error removing cache directory:', err);
+        });
+
+        isAuthenticated = false;
+        res.send('Logged out successfully and folders removed.');
+    } catch (error) {
+        console.error('Error during logout:', error);
+
+        // Check for the specific error related to puppeteer evaluation
+        if (error.message.includes('Evaluation failed')) {
+            res.status(500).send('Logout failed due to Puppeteer issue.');
+        } else {
+            res.status(500).send('Error logging out.');
+        }
+    }
+});
+
 
 // Schedule a message job
 function scheduleJob(scheduleTime, chatId, message) {
