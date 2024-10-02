@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function showSchedulingScreen() {
         document.getElementById('qr-code-container').classList.add('d-none');
         document.getElementById('scheduling-container').classList.remove('d-none');
-        document.getElementById('logoutButton').classList.remove('d-none'); 
+        document.getElementById('logoutButton').classList.remove('d-none');
     }
 
     // Form submission to schedule a message
@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const result = await response.text();
             document.getElementById('response').innerText = result;
             document.getElementById('scheduleForm').reset();
+            fetchScheduledMessages();
             setTimeout(() => document.getElementById('response').innerText = '', 5000);
         } catch (error) {
             document.getElementById('response').innerText = 'An error occurred: ' + error;
@@ -95,31 +96,32 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Fetch scheduled messages and display them
-async function fetchScheduledMessages() {
-    const response = await fetch('/scheduled-messages');
-    const messages = await response.json();
-  
-    const messagesList = document.getElementById('scheduled-messages-list');
-    messagesList.innerHTML = '';
-  
-    messages.forEach((msg, index) => {
-      const row = document.createElement('tr');
-      
-      row.innerHTML = `
+    async function  fetchScheduledMessages() {
+        const response = await fetch('/scheduled-messages', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        const messages = await response.json();
+
+        const messagesList = document.getElementById('scheduled-messages-list');
+        messagesList.innerHTML = '';
+
+        messages.forEach((msg, index) => {
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
         <td>${msg.phoneNumber}</td>
         <td>${msg.message}</td>
-        <td>${new Date(msg.time).toLocaleString()}</td>
-        <td>
-          <button onclick="editMessage(${index})">Edit</button>
-          <button onclick="deleteMessage(${msg.id})">Delete</button>
-        </td>
+        <td>${new Date(msg.datetime).toLocaleString()}</td>
       `;
-  
-      messagesList.appendChild(row);
-    });
-  }
-  
-  // Call the fetch function on page load
-  fetchScheduledMessages();
-  
+
+            messagesList.appendChild(row);
+        });
+    }
+
+    // Call the fetch function on page load
+    fetchScheduledMessages();
+
 });
