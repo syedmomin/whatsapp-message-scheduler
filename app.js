@@ -13,6 +13,8 @@ const port = 3000;
 app.use(express.json());
 app.use(express.static('public'));
 
+const MESSAGES_FILE = path.join(__dirname, 'scheduledMessages.json');
+
 // Initialize WhatsApp client
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -44,10 +46,12 @@ client.on('auth_failure', (msg) => {
 
 client.on('ready', () => {
     logToFile('Client is ready!');
+    rescheduleAllMessages(); // Reschedule messages on client ready
 });
 
 // Initialize WhatsApp client
 client.initialize();
+
 
 // Endpoints
 app.get('/qr-code', (req, res) => {
@@ -62,6 +66,28 @@ app.get('/status', (req, res) => {
     res.json({ authenticated: isAuthenticated });
 });
 
+// Load scheduled messages from file (if any)
+function loadScheduledMessages() {
+    if (fs.existsSync(MESSAGES_FILE)) {
+        const data = fs.readFileSync(MESSAGES_FILE, 'utf8');
+        scheduledMessages = JSON.parse(data);
+    }
+}
+
+// Save scheduled messages to file
+function saveScheduledMessages() {
+    fs.writeFileSync(MESSAGES_FILE, JSON.stringify(scheduledMessages, null, 2), 'utf8');
+}
+
+// Reschedule all messages on startup
+function rescheduleAllMessages() {
+    scheduledMessages.forEach(({ id, phoneNumber, message, datetime }) => {
+        const chatId = `${phoneNumber}@c.us`;
+        scheduleJob(datetime, chatId, message);
+    });
+}
+
+// Schedule Message Function
 app.post('/schedule-message', (req, res) => {
     const { phoneNumber, message, datetime } = req.body;
 
@@ -74,11 +100,13 @@ app.post('/schedule-message', (req, res) => {
 
     const newMessage = {
         id: Date.now(), // Unique ID for the message
-        phoneNumber,
+        phoneNumber: formattedNumber,
         message,
         datetime,
     };
+
     scheduledMessages.push(newMessage);
+    saveScheduledMessages(); // Save messages to file
     scheduleJob(datetime, chatId, message);
 
     res.send('Message scheduled successfully!');
@@ -87,11 +115,11 @@ app.post('/schedule-message', (req, res) => {
 // schudled messages
 app.get('/scheduled-messages', async (req, res) => {
     try {
-        res.json(scheduledMessages)
-    }catch (err) {
+        res.json(scheduledMessages);
+    } catch (err) {
         logToFile('Failed to send message: ' + err);
     }
-})
+});
 
 // Logout endpoint
 app.post('/logout', async (req, res) => {
@@ -129,7 +157,6 @@ app.post('/logout', async (req, res) => {
     }
 });
 
-
 // Schedule a message job
 function scheduleJob(scheduleTime, chatId, message) {
     schedule.scheduleJob(new Date(scheduleTime), async () => {
@@ -165,4 +192,5 @@ app.get('/logs', (req, res) => {
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
+    loadScheduledMessages(); // Load messages when server starts
 });
