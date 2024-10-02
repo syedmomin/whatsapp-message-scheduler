@@ -6,7 +6,7 @@ const rimraf = require('rimraf');
 
 let qrCodeImage = '';
 let isAuthenticated = false;
-let qrRefreshInterval;
+// let qrRefreshInterval;
 
 // Initialize WhatsApp Client
 const client = new Client({
@@ -18,11 +18,12 @@ function initWhatsAppClient() {
     client.on('authenticated', handleAuthenticated);
     client.on('auth_failure', handleAuthFailure);
     client.on('ready', () => {
-        clearInterval(qrRefreshInterval); // Clear QR refresh interval once authenticated
+        // clearInterval(qrRefreshInterval); // Clear QR refresh interval once authenticated
         logToFile('Client is ready!');
     });
 
     client.initialize();
+    // startQRRefresh();
 }
 
 // Handle QR Code
@@ -36,11 +37,11 @@ async function handleQRCode(qr) {
     }
 }
 
-function startQRRefresh() {
-    qrRefreshInterval = setInterval(() => {
-        client.getQRCode().then(handleQRCode); // Re-generate the QR code
-    }, 20000); // Refresh every 20 seconds (can adjust based on your needs)
-}
+// function startQRRefresh() {
+//     qrRefreshInterval = setInterval(() => {
+//         handleQRCode(); // Re-generate the QR code
+//     }, 10000); // Refresh every 20 seconds (can adjust based on your needs)
+// }
 
 // Handle Successful Authentication
 function handleAuthenticated() {

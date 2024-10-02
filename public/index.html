@@ -17,7 +17,12 @@
     <div class="container">
         <!-- QR Code Display -->
         <div id="qr-code-container">
-            <div id="loading-code"><div></div><div></div><div></div><div></div></div>
+            <div id="loading-code">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
             <div id="qr-code"></div>
         </div>
 
@@ -33,8 +38,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link active" id="schedule-tab" data-bs-toggle="tab" href="#schedule" role="tab"
-                                aria-controls="message" aria-selected="true">
+                            <a class="nav-link" id="schedule-tab" data-bs-toggle="tab" href="#schedule" role="tab"
+                                aria-controls="schedule" aria-selected="false">
                                 <i class="fas fa-envelope"></i> Scheduled Messages
                             </a>
                         </li>
@@ -55,8 +60,8 @@
                                     class="fab fa-facebook"></i></a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="https://www.linkedin.com/in/syed-momin-danysam04/" target="_blank"><i
-                                    class="fab fa-linkedin"></i></a>
+                            <a class="nav-link" href="https://www.linkedin.com/in/syed-momin-danysam04/"
+                                target="_blank"><i class="fab fa-linkedin"></i></a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="https://danysam-portfolio.netlify.app/" target="_blank"><i
@@ -94,19 +99,21 @@
                     </div>
 
                     <!-- scheduled Messages Tab -->
-                    <div class="tab-pane fade show active" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
-                        <table>
+                    <div class="tab-pane fade" id="schedule" role="tabpanel" aria-labelledby="schedule-tab">
+                        <div class="form-container">
+                        <table class="table">
                             <thead>
-                              <tr>
-                                <th>Phone Number</th>
-                                <th>Message</th>
-                                <th>Scheduled Time</th>
-                                <th>Actions</th>
-                              </tr>
+                                <tr>
+                                    <th>Phone Number</th>
+                                    <th>Message</th>
+                                    <th>Scheduled Time</th>
+                                    <th>Actions</th>
+                                </tr>
                             </thead>
                             <tbody id="scheduled-messages-list">
                             </tbody>
-                        </table>                      
+                        </table>
+                        </div>
                     </div>
 
 
@@ -129,5 +136,4 @@
     <script src="scripts.js"></script>
 
 </body>
-
 </html>
