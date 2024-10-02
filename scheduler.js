@@ -3,12 +3,20 @@ const { Client } = require('whatsapp-web.js');
 const fs = require('fs');
 
 const client = new Client();
-
+let scheduledMessages = [];
 // Schedule Message Function
 function scheduleMessage(phoneNumber, message, datetime) {
     const formattedNumber = formatPhoneNumber(phoneNumber);
     const chatId = `${formattedNumber}@c.us`;
 
+      // Store message in scheduledMessages array
+      const newMessage = {
+        id: Date.now(), // Unique ID for the message
+        phoneNumber,
+        message,
+        datetime,
+    };
+    scheduledMessages.push(newMessage);
     scheduleJob(datetime, chatId, message);
 }
 
@@ -23,11 +31,18 @@ function scheduleJob(scheduleTime, chatId, message) {
         try {
             await client.sendMessage(chatId, message);
             logToFile(`Message sent to ${chatId}: ${message}`);
+
+       scheduledMessages = scheduledMessages.filter(msg => msg.id !== messageId);
         } catch (err) {
             logToFile('Failed to send message: ' + err);
         }
     });
 }
+
+function getScheduledMessages() {
+    return scheduledMessages;
+}
+
 
 // Log to file function (shared functionality)
 function logToFile(message) {
@@ -39,4 +54,5 @@ function logToFile(message) {
 
 module.exports = {
     scheduleMessage,
+    getScheduledMessages,
 };

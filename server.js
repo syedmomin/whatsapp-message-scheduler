@@ -1,7 +1,6 @@
 const express = require('express');
-const path = require('path');
-const { initWhatsAppClient } = require('./whatsappClient');
-const { scheduleMessage } = require('./scheduler');
+const { initWhatsAppClient, getQRCodeImage } = require('./whatsappClient');
+const { scheduleMessage, getScheduledMessages } = require('./scheduler');
 const fs = require('fs');
 
 const app = express();
@@ -20,6 +19,7 @@ app.get('/status', getStatus);
 app.post('/schedule-message', scheduleMessageEndpoint);
 app.post('/logout', logoutClient);
 app.get('/logs', getLogs);
+app.get('/scheduled-messages', getScheduledMessagesTable);
 
 // Start server
 app.listen(port, () => console.log(`Server is running on http://localhost:${port}`));
@@ -30,12 +30,23 @@ app.listen(port, () => console.log(`Server is running on http://localhost:${port
 
 // QR Code Endpoint
 function getQRCode(req, res) {
-    const qrCodeImage = require('./whatsappClient').qrCodeImage;
+    
+    const qrCodeImage = getQRCodeImage(); 
     if (qrCodeImage) {
         res.send(`<h2>Scan the QR Code to Authenticate</h2><img src="${qrCodeImage}" alt="QR Code">`);
     } else {
         res.status(404).send('Please wait...');
     }
+}
+
+function getScheduledMessagesTable(req, res) {
+    const scheduledMessages = getScheduledMessages();
+    // const currentTime = new Date();
+
+  // Filter out messages whose scheduled time has passed
+//   scheduledMessages = scheduledMessages.filter(msg => new Date(msg.time) > currentTime);
+
+  res.json(scheduledMessages);
 }
 
 // Status Endpoint

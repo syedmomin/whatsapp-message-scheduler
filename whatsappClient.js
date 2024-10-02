@@ -6,6 +6,7 @@ const rimraf = require('rimraf');
 
 let qrCodeImage = '';
 let isAuthenticated = false;
+let qrRefreshInterval;
 
 // Initialize WhatsApp Client
 const client = new Client({
@@ -16,7 +17,10 @@ function initWhatsAppClient() {
     client.on('qr', handleQRCode);
     client.on('authenticated', handleAuthenticated);
     client.on('auth_failure', handleAuthFailure);
-    client.on('ready', () => logToFile('Client is ready!'));
+    client.on('ready', () => {
+        clearInterval(qrRefreshInterval); // Clear QR refresh interval once authenticated
+        logToFile('Client is ready!');
+    });
 
     client.initialize();
 }
@@ -30,6 +34,12 @@ async function handleQRCode(qr) {
     } catch (err) {
         console.error('Error generating QR code:', err);
     }
+}
+
+function startQRRefresh() {
+    qrRefreshInterval = setInterval(() => {
+        client.getQRCode().then(handleQRCode); // Re-generate the QR code
+    }, 20000); // Refresh every 20 seconds (can adjust based on your needs)
 }
 
 // Handle Successful Authentication
@@ -81,9 +91,16 @@ function logToFile(message) {
     });
 }
 
+// Getter to always return the latest QR code image
+function getQRCodeImage() {
+    return qrCodeImage;
+}
+
 module.exports = {
     initWhatsAppClient,
     logoutClient,
-    qrCodeImage,
-    isAuthenticated,
+    getQRCodeImage,  // Export the getter for qrCodeImage
+    get isAuthenticated() {
+        return isAuthenticated;
+    }
 };

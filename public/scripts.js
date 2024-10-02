@@ -93,4 +93,33 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Error logging out: ' + error);
         }
     });
+
+    // Fetch scheduled messages and display them
+async function fetchScheduledMessages() {
+    const response = await fetch('/scheduled-messages');
+    const messages = await response.json();
+  
+    const messagesList = document.getElementById('scheduled-messages-list');
+    messagesList.innerHTML = '';
+  
+    messages.forEach((msg, index) => {
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${msg.phoneNumber}</td>
+        <td>${msg.message}</td>
+        <td>${new Date(msg.time).toLocaleString()}</td>
+        <td>
+          <button onclick="editMessage(${index})">Edit</button>
+          <button onclick="deleteMessage(${msg.id})">Delete</button>
+        </td>
+      `;
+  
+      messagesList.appendChild(row);
+    });
+  }
+  
+  // Call the fetch function on page load
+  fetchScheduledMessages();
+  
 });
