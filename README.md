@@ -13,7 +13,8 @@ This WhatsApp extension allows you to schedule messages by scanning a QR code th
   - **Schedule Time**: Select the date and time when the message should be sent.
 - **Message Logging**: All scheduled messages and their statuses are logged for future reference.
 - **Responsive UI**: A user-friendly interface that works well on different screen sizes.
-
+- **Message Management**: You can view, edit, or delete your scheduled messages before they are sent.
+- **Logout Option**: Easily log out of your WhatsApp Web session for added security
 
 ### Security
 
