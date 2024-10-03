@@ -19,7 +19,7 @@ const MESSAGES_FILE = path.join(__dirname, 'scheduledMessages.json');
 const client = new Client({
     authStrategy: new LocalAuth()
 });
-
+const jobs = {}; 
 let qrCodeImage = '';
 let isAuthenticated = false;
 let scheduledMessages = [];
@@ -45,7 +45,7 @@ client.on('auth_failure', (msg) => {
 });
 
 client.on('ready', () => {
-    logToFile('Client is ready!');
+    // logToFile('Client is ready!');
     rescheduleAllMessages(); // Reschedule messages on client ready
 });
 
@@ -121,6 +121,41 @@ app.get('/scheduled-messages', async (req, res) => {
     }
 });
 
+// Update a scheduled message
+app.post('/edit-scheduled-message/:index', (req, res) => {
+    const { newMessage } = req.body;
+    const index = req.params.index;
+
+    if (scheduledMessages[index]) {
+        scheduledMessages[index].message = newMessage;
+        res.json({ success: true });
+    } else {
+        res.json({ success: false, message: 'Message not found' });
+    }
+});
+
+// Delete message endpoint
+app.delete('/delete-message/:id', (req, res) => {
+    const messageId = parseInt(req.params.id);
+
+    // Find the index of the message
+    const index = scheduledMessages.findIndex(msg => msg.id === messageId);
+    if (index !== -1) {
+        // Cancel the scheduled job if it exists
+        if (jobs[messageId]) {
+            jobs[messageId].cancel();
+            delete jobs[messageId];
+        }
+
+        // Remove the message from the list
+        scheduledMessages.splice(index, 1);
+
+        res.send('Message deleted successfully!');
+    } else {
+        res.status(404).send('Message not found.');
+    }
+});
+
 // Logout endpoint
 app.post('/logout', async (req, res) => {
     try {
@@ -158,15 +193,30 @@ app.post('/logout', async (req, res) => {
 });
 
 // Schedule a message job
-function scheduleJob(scheduleTime, chatId, message) {
-    schedule.scheduleJob(new Date(scheduleTime), async () => {
+function scheduleJob(scheduleTime, chatId, message, messageId) {
+    const job = schedule.scheduleJob(new Date(scheduleTime), async () => {
         try {
+
+            const messageExists = scheduledMessages.find(msg => msg.id === messageId);
+
+            if (!messageExists) {
+                logToFile(`Message with ID ${messageId} was deleted before it could be sent.`);
+                delete jobs[messageId]; // Remove the job reference after confirming it's deleted
+                return; // Exit the job as the message is deleted
+            }
+            
             await client.sendMessage(chatId, message);
             logToFile(`Message sent to ${chatId}: ${message}`);
+
+            // After sending, remove from scheduledMessages
+            scheduledMessages = scheduledMessages.filter(msg => msg.id !== messageId);
+            delete jobs[messageId]; // Remove the job reference after sending
         } catch (err) {
             logToFile('Failed to send message: ' + err);
         }
     });
+
+    jobs[messageId] = job; // Store the job so we can cancel it later if needed
 }
 
 // Logging function
